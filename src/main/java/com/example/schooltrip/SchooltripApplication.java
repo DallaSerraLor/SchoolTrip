@@ -40,7 +40,7 @@ public class SchooltripApplication {
 			teacher.add(new Person(1, "vero", "Verdi", "mrossi1", "1234", Role.TEACHER));
 			teacher.add(new Person(2, "vero", "Verdi", "mrossi2", "1234", Role.TEACHER));
 			teacher.add(new Person(3, "vero", "Verdi", "mrossi3", "1234", Role.TEACHER));
-			
+					
 			student.add(new Person(4, "vero", "Verdi", "mrossi4", "1234", Role.STUDENT));
 			student.add(new Person(5, "vero", "Verdi", "mrossi5", "1234", Role.STUDENT));
 			student.add(new Person(6, "vero", "Verdi", "mrossi6", "1234", Role.STUDENT));

@@ -33,7 +33,7 @@
           <div class="teacher-dashboard">
             <div class="trip-form-wrapper">
         <h2><i class="fa-solid fa-plus"></i> Create New Trip</h2>
-        <form class="trip-form-grid">
+        <form class="trip-form-grid" onsubmit="handleFormSubmit(event)">
           <!-- Left column -->
           <div class="form-group image-upload">
             <input type="file" id="image" accept="image/*" hidden onchange="previewImage(event)">
@@ -80,7 +80,7 @@
           </div>
         
           <div class="form-actions full-width">
-            <button type="submit" class="btn create-btn">
+            <button type="submit" class="btn create-btn" id="submitButton">
               <i class="fa-solid fa-paper-plane"></i> Create Trip
             </button>
           </div>
@@ -96,7 +96,7 @@
         <div class="trip-page">
           <h1>Your Trips</h1>
           <div class="manage-trips-container">
-            <div class="trip-card manage">
+            <div class="trip-card manage" data-id="amalfi">
               <img src="amalfi.jpg" alt="Amalfi Trip" class="trip-image">
               <div class="trip-info">
                 <h2>Amalfi Coast Retreat</h2>
@@ -106,14 +106,18 @@
                 <p><i class="fa-solid fa-euro-sign"></i> 150€</p>
           
                 <div class="trip-actions">
-                  <button class="btn small-btn"><i class="fa-solid fa-pen"></i> Edit</button>
-                  <button class="btn small-btn red"><i class="fa-solid fa-trash"></i> Delete</button>
+                  <button class="btn small-btn" onclick="editTrip('amalfi')">
+                    <i class="fa-solid fa-pen"></i> Edit
+                  </button>
+                  <button class="btn small-btn red" onclick="deleteTrip('amalfi')">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
                   <button class="btn small-btn"><i class="fa-solid fa-users"></i> Participants</button>
                 </div>
               </div>
             </div>
 
-            <div class="trip-card manage">
+            <div class="trip-card manage" data-id="dolomites">
               <img src="dolomites.jpg" alt="Dolomites Trip" class="trip-image">
               <div class="trip-info">
                 <h2>Dolomites Nature Hike</h2>
@@ -123,14 +127,18 @@
                 <p><i class="fa-solid fa-euro-sign"></i> 200€</p>
             
                 <div class="trip-actions">
-                  <button class="btn small-btn"><i class="fa-solid fa-pen"></i> Edit</button>
-                  <button class="btn small-btn red"><i class="fa-solid fa-trash"></i> Delete</button>
+                  <button class="btn small-btn" onclick="editTrip('dolomites')">
+                    <i class="fa-solid fa-pen"></i> Edit
+                  </button>
+                  <button class="btn small-btn red" onclick="deleteTrip('dolomites')">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
                   <button class="btn small-btn"><i class="fa-solid fa-users"></i> Participants</button>
                 </div>
               </div>
             </div>
 
-            <div class="trip-card manage">
+            <div class="trip-card manage" data-id="florence">
               <img src="florence.jpg" alt="Florence Trip" class="trip-image">
               <div class="trip-info">
                 <h2>Florence Art Tour</h2>
@@ -140,26 +148,41 @@
                 <p><i class="fa-solid fa-euro-sign"></i> 120€</p>
             
                 <div class="trip-actions">
-                  <button class="btn small-btn"><i class="fa-solid fa-pen"></i> Edit</button>
-                  <button class="btn small-btn red"><i class="fa-solid fa-trash"></i> Delete</button>
+                  <button class="btn small-btn" onclick="editTrip('florence')">
+                    <i class="fa-solid fa-pen"></i> Edit
+                  </button>
+                  <button class="btn small-btn red" onclick="deleteTrip('florence')">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
                   <button class="btn small-btn"><i class="fa-solid fa-users"></i> Participants</button>
                 </div>
               </div>
             </div>
-          
-            <!-- You can duplicate this card for more trips -->
           </div>
         </div>
       </section>
 
     </div>
   </div>
+  <div id="toast" class="toast">Trip saved!</div> <!-- Post button clicking pop-up -->
 
+  <div id="confirmModal" class="confirm-modal"> <!-- Delete confirmation pop-up -->
+    <div class="modal-content">
+      <p>Are you sure you want to delete this trip?</p>
+      <div class="modal-actions">
+        <button class="btn small-btn red" id="confirmYes">Yes, Delete</button>
+        <button class="btn small-btn" id="confirmCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
 
 <script>
+
+  let currentEditId = null;
+
   function previewImage(event) {
     const preview = document.getElementById('imagePreview');
     preview.src = URL.createObjectURL(event.target.files[0]);
@@ -175,4 +198,208 @@
   function goToManageTrips() {
   scrollWrapper.style.transform = 'translateX(-100vw)';
   }
+
+  const mockTrips = {
+    amalfi: {
+      title: "Amalfi Coast Retreat",
+      destination: "Amalfi Coast, Italy",
+      startDate: "2025-05-25",
+      endDate: "2025-05-27",
+      maxStudents: 25,
+      cost: 150,
+      description: "A relaxing end-of-year trip to the beautiful Amalfi Coast.",
+      image: "amalfi.jpg"
+    },
+    dolomites: {
+      title: "Dolomites Nature Hike",
+      destination: "Trentino-Alto Adige",
+      startDate: "2025-06-15",
+      endDate: "2025-06-18",
+      maxStudents: 20,
+      cost: 200,
+      description: "A hiking adventure in the breathtaking Dolomites.",
+      image: "dolomites.jpg"
+    },
+    florence: {
+      title: "Florence Art Tour",
+      destination: "Florence, Italy",
+      startDate: "2025-03-14",
+      endDate: "2025-03-15",
+      maxStudents: 25,
+      cost: 120,
+      description: "Dive into the Renaissance with guided visits to the Uffizi Gallery, the Duomo, and Michelangelo's David.",
+      image: "amalfi.jpg",
+    }
+  };
+
+  // Trip editing
+
+  function editTrip(id) {
+  const trip = mockTrips[id];
+  if (!trip) return;
+
+  currentEditId = id;
+
+  // Update Submit Button
+  document.getElementById('submitButton').innerHTML = `
+  <i class="fa-solid fa-paper-plane"></i> Update Trip`;
+
+  // Fill form inputs
+  document.getElementById('tripName').value = trip.title;
+  document.getElementById('destination').value = trip.destination;
+  document.getElementById('startDate').value = trip.startDate;
+  document.getElementById('endDate').value = trip.endDate;
+  document.getElementById('maxStudents').value = trip.maxStudents;
+  document.getElementById('cost').value = trip.cost;
+  document.getElementById('description').value = trip.description;
+
+  // Set image preview
+  const preview = document.getElementById('imagePreview');
+  preview.src = trip.image;
+  preview.style.display = 'block';
+
+  // Scroll to the form
+  goToCreateTrip();
+
+  // Focus for visual feedback
+  document.getElementById('tripName').focus();
+  }
+
+
+
+  function handleFormSubmit(e) {
+  e.preventDefault(); // prevent form refresh
+
+  // Update Submit Button
+  document.getElementById('submitButton').innerHTML = `
+  <i class="fa-solid fa-paper-plane"></i> Create Trip`;
+
+  const trip = {
+    title: document.getElementById('tripName').value,
+    destination: document.getElementById('destination').value,
+    startDate: document.getElementById('startDate').value,
+    endDate: document.getElementById('endDate').value,
+    maxStudents: document.getElementById('maxStudents').value,
+    cost: document.getElementById('cost').value,
+    description: document.getElementById('description').value,
+    image: document.getElementById('imagePreview').src || 'default.jpg'
+  };
+
+  if (currentEditId) {
+    // UPDATE mode
+    mockTrips[currentEditId] = trip;
+    updateTripCard(currentEditId, trip);
+    currentEditId = null; // clear edit mode
+  } else {
+    // CREATE mode (you could generate a new ID here)
+    const newId = trip.title.toLowerCase().replace(/\s+/g, '-');
+    mockTrips[newId] = trip;
+    renderNewTripCard(newId, trip);
+  }
+
+  showToast("Trip updated!");
+  // After saving or updating
+  currentEditId = null;
+  document.querySelector('.trip-form-grid').reset(); // clear inputs
+  document.getElementById('imagePreview').style.display = 'none'; // hide image preview
+}
+
+function updateTripCard(id, data) {
+  const card = document.querySelector(`.trip-card[data-id="${id}"]`);
+  if (!card) return;
+
+  card.querySelector('h2').textContent = data.title;
+  card.querySelector('.trip-image').src = data.image;
+  
+  const infoPs = card.querySelectorAll('p');
+  infoPs[0].innerHTML = `<i class="fa-solid fa-location-dot"></i> ${data.destination}`;
+  infoPs[1].innerHTML = `<i class="fa-solid fa-calendar-days"></i> ${data.startDate} to ${data.endDate}`;
+  infoPs[2].innerHTML = `<i class="fa-solid fa-users"></i> 0/${data.maxStudents} Students`; // Optional: add real value
+  infoPs[3].innerHTML = `<i class="fa-solid fa-euro-sign"></i> ${data.cost}€`;
+}
+
+//TRIP CREATING FUNCTION
+
+function renderNewTripCard(id, data) {
+  const container = document.querySelector('.manage-trips-container');
+
+  const card = document.createElement('div');
+  card.className = 'trip-card manage';
+  card.setAttribute('data-id', id);
+
+  card.innerHTML = `
+    <img src="${data.image}" alt="${data.title}" class="trip-image">
+    <div class="trip-info">
+      <h2>${data.title}</h2>
+      <p><i class="fa-solid fa-location-dot"></i> ${data.destination}</p>
+      <p><i class="fa-solid fa-calendar-days"></i> ${data.startDate} to ${data.endDate}</p>
+      <p><i class="fa-solid fa-users"></i> 0/${data.maxStudents} Students</p>
+      <p><i class="fa-solid fa-euro-sign"></i> ${data.cost}€</p>
+
+      <div class="trip-actions">
+        <button class="btn small-btn" onclick="editTrip('${id}')">
+          <i class="fa-solid fa-pen"></i> Edit
+        </button>
+        <button class="btn small-btn red" onclick="deleteTrip('${id}', this)">
+          <i class="fa-solid fa-trash"></i> Delete
+        </button>
+        <button class="btn small-btn">
+          <i class="fa-solid fa-users"></i> Participants
+        </button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(card);
+}
+
+//TRIP DELETING FUNCTION
+
+function deleteTrip(id, button) {
+  if (!confirm("Are you sure you want to delete this trip?")) return;
+
+  // Remove from mock data
+  delete mockTrips[id];
+
+  // Remove from DOM
+  const card = button.closest('.trip-card');
+  if (card) card.remove();
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2500);
+}
+
+let pendingDeleteId = null;
+let pendingDeleteButton = null;
+
+function deleteTrip(id, button) {
+  pendingDeleteId = id;
+  pendingDeleteButton = button;
+  document.getElementById('confirmModal').style.display = 'flex';
+}
+
+document.getElementById('confirmYes').onclick = () => {
+  const card = pendingDeleteButton.closest('.trip-card');
+  if (card) card.remove();
+  delete mockTrips[pendingDeleteId];
+
+  document.getElementById('confirmModal').style.display = 'none';
+  showToast("Trip deleted!");
+
+  pendingDeleteId = null;
+  pendingDeleteButton = null;
+};
+
+document.getElementById('confirmCancel').onclick = () => {
+  document.getElementById('confirmModal').style.display = 'none';
+  pendingDeleteId = null;
+  pendingDeleteButton = null;
+};
+
 </script>
